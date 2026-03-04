@@ -1,7 +1,5 @@
 FROM nvidia/cuda:12.9.1-devel-ubuntu24.04 AS base-builder
 
-ENV SCCACHE=0.10.0
-ENV RUSTC_WRAPPER=/usr/local/bin/sccache
 ENV PATH="/root/.cargo/bin:${PATH}"
 # aligned with `cargo-chef` version in `lukemathwalker/cargo-chef:latest-rust-1.92-bookworm`
 ENV CARGO_CHEF=0.1.73
@@ -12,9 +10,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Donwload and configure sccache
-RUN curl -fsSL https://github.com/mozilla/sccache/releases/download/v$SCCACHE/sccache-v$SCCACHE-x86_64-unknown-linux-musl.tar.gz | tar -xzv --strip-components=1 -C /usr/local/bin sccache-v$SCCACHE-x86_64-unknown-linux-musl/sccache && \
-    chmod +x /usr/local/bin/sccache
 
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 RUN cargo install cargo-chef --version $CARGO_CHEF --locked
@@ -42,8 +37,6 @@ ARG RAYON_NUM_THREADS
 ARG CARGO_BUILD_JOBS
 ARG CARGO_BUILD_INCREMENTAL
 
-# sccache specific variables
-ARG SCCACHE_GHA_ENABLED
 
 WORKDIR /usr/src
 
@@ -74,9 +67,9 @@ RUN --mount=type=secret,id=actions_results_url,env=ACTIONS_RESULTS_URL \
     --mount=type=secret,id=actions_runtime_token,env=ACTIONS_RUNTIME_TOKEN \
     if [ ${CUDA_COMPUTE_CAP} -ge 75 -a ${CUDA_COMPUTE_CAP} -lt 80 ]; \
     then \
-    cargo chef cook --release --features candle-cuda-turing --features static-linking --no-default-features --recipe-path recipe.json && sccache -s; \
+    cargo chef cook --release --features candle-cuda-turing --features static-linking --no-default-features --recipe-path recipe.json;\
     else \
-    cargo chef cook --release --features candle-cuda --features static-linking --no-default-features --recipe-path recipe.json && sccache -s; \
+    cargo chef cook --release --features candle-cuda --features static-linking --no-default-features --recipe-path recipe.json;\
     fi;
 
 COPY backends backends
@@ -91,9 +84,9 @@ RUN --mount=type=secret,id=actions_results_url,env=ACTIONS_RESULTS_URL \
     --mount=type=secret,id=actions_runtime_token,env=ACTIONS_RUNTIME_TOKEN \
     if [ ${CUDA_COMPUTE_CAP} -ge 75 -a ${CUDA_COMPUTE_CAP} -lt 80 ]; \
     then \
-    cargo build --release --bin text-embeddings-router -F candle-cuda-turing -F static-linking -F http --no-default-features && sccache -s; \
+    cargo build --release --bin text-embeddings-router -F candle-cuda-turing -F static-linking -F http --no-default-features;\
     else \
-    cargo build --release --bin text-embeddings-router -F candle-cuda -F static-linking -F http --no-default-features && sccache -s; \
+    cargo build --release --bin text-embeddings-router -F candle-cuda -F static-linking -F http --no-default-features;\
     fi;
 
 FROM builder AS grpc-builder
@@ -114,9 +107,9 @@ RUN --mount=type=secret,id=actions_results_url,env=ACTIONS_RESULTS_URL \
     --mount=type=secret,id=actions_runtime_token,env=ACTIONS_RUNTIME_TOKEN \
     if [ ${CUDA_COMPUTE_CAP} -ge 75 -a ${CUDA_COMPUTE_CAP} -lt 80 ]; \
     then \
-    cargo build --release --bin text-embeddings-router -F candle-cuda-turing -F static-linking -F grpc --no-default-features && sccache -s; \
+    cargo build --release --bin text-embeddings-router -F candle-cuda-turing -F static-linking -F grpc --no-default-features;\
     else \
-    cargo build --release --bin text-embeddings-router -F candle-cuda -F static-linking -F grpc --no-default-features && sccache -s; \
+    cargo build --release --bin text-embeddings-router -F candle-cuda -F static-linking -F grpc --no-default-features;\
     fi;
 
 FROM nvidia/cuda:12.9.1-runtime-ubuntu24.04 AS base

@@ -35,7 +35,16 @@ jobs:
           GITHUB_REF: ${{ github.ref }}
         run: |
           branchName=$(echo $GITHUB_REF | sed 's,refs/heads/,,g')
-          matrix=$(jq --arg branchName "$branchName" 'map(. | select((.runOn==$branchName) or (.runOn=="always")) )' .github/workflows/matrix.json)
+          matrix=$(jq --arg branchName "$branchName" '
+            map(select((.runOn==$branchName) or (.runOn=="always"))) |
+            map(
+              if .os then
+                . as $e | .os[] | {os: .} + ($e | del(.os))
+              else
+                . + {os: "ubuntu-latest"}
+              end
+            )
+          ' .github/workflows/matrix.json)
           echo "{\"include\":$(echo $matrix)}"
           echo ::set-output name=matrix::{\"include\":$(echo $matrix)}\"
 
@@ -46,8 +55,7 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.job }}-${{matrix.name}}-${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
-    runs-on:
-      group: aws-highmemory-32-plus-priv
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
       packages: write
@@ -93,22 +101,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: configure aws credentials
-        id: aws-creds
-        uses: aws-actions/configure-aws-credentials@v5.1.1
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_GITHUB_BUILDX_CACHE }}
-          role-duration-seconds: 7200
-          aws-region: us-east-1
-          output-credentials: true
-
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: |
-            registry.internal.huggingface.tech/api-inference/text-embeddings-inference
-            ghcr.io/huggingface/text-embeddings-inference
+            ghcr.io/nicolasbfr/text-embeddings-inference
           flavor: |
             latest=false
           tags: |
@@ -138,8 +136,6 @@ jobs:
             actions_runtime_token=${{ env.ACTIONS_RUNTIME_TOKEN }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=s3,region=us-east-1,bucket=${{ vars.AWS_S3BUCKET_GITHUB_BUILDX_CACHE }},name=text-embeddings-inference-cache-${{matrix.name}},access_key_id=${{ steps.aws-creds.outputs.aws-access-key-id }},secret_access_key=${{ steps.aws-creds.outputs.aws-secret-access-key }},session_token=${{ steps.aws-creds.outputs.aws-session-token }},mode=max
-          cache-to: type=s3,region=us-east-1,bucket=${{ vars.AWS_S3BUCKET_GITHUB_BUILDX_CACHE }},name=text-embeddings-inference-cache-${{matrix.name}},access_key_id=${{ steps.aws-creds.outputs.aws-access-key-id }},secret_access_key=${{ steps.aws-creds.outputs.aws-secret-access-key }},session_token=${{ steps.aws-creds.outputs.aws-session-token }},mode=max
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta-grpc
@@ -147,8 +143,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            registry.internal.huggingface.tech/api-inference/text-embeddings-inference
-            ghcr.io/huggingface/text-embeddings-inference
+            ghcr.io/nicolasbfr/text-embeddings-inference
           flavor: |
             latest=false
           tags: |
@@ -180,4 +175,3 @@ jobs:
             actions_runtime_token=${{ env.ACTIONS_RUNTIME_TOKEN }}
           tags: ${{ steps.meta-grpc.outputs.tags }}
           labels: ${{ steps.meta-grpc.outputs.labels }}
-          cache-from: type=s3,region=us-east-1,bucket=${{ vars.AWS_S3BUCKET_GITHUB_BUILDX_CACHE }},name=text-embeddings-inference-cache-${{matrix.name}},access_key_id=${{ steps.aws-creds.outputs.aws-access-key-id }},secret_access_key=${{ steps.aws-creds.outputs.aws-secret-access-key }},session_token=${{ steps.aws-creds.outputs.aws-session-token }},mode=max

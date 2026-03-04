@@ -7,7 +7,8 @@
     "cudaComputeCap": 75,
     "extraBuildArgs": "DEFAULT_USE_FLASH_ATTENTION=False",
     "grpc": true,
-    "dockerfile": "Dockerfile-cuda"
+    "dockerfile": "Dockerfile-cuda",
+    "os": ["ubuntu-latest", "ubuntu-latest-arm"]
   },
   {
     "name": "ampere-80",
@@ -16,7 +17,8 @@
     "sccache": true,
     "cudaComputeCap": 80,
     "grpc": true,
-    "dockerfile": "Dockerfile-cuda"
+    "dockerfile": "Dockerfile-cuda",
+    "os": ["ubuntu-latest", "ubuntu-latest-arm"]
   },
   {
     "name": "ampere-86",
@@ -25,7 +27,8 @@
     "sccache": true,
     "cudaComputeCap": 86,
     "grpc": true,
-    "dockerfile": "Dockerfile-cuda"
+    "dockerfile": "Dockerfile-cuda",
+    "os": ["ubuntu-latest", "ubuntu-latest-arm"]
   },
   {
     "name": "ada-lovelace",
@@ -34,7 +37,8 @@
     "sccache": true,
     "cudaComputeCap": 89,
     "grpc": true,
-    "dockerfile": "Dockerfile-cuda"
+    "dockerfile": "Dockerfile-cuda",
+    "os": ["ubuntu-latest", "ubuntu-latest-arm"]
   },
   {
     "name": "hopper",
@@ -43,7 +47,8 @@
     "sccache": true,
     "cudaComputeCap": 90,
     "grpc": true,
-    "dockerfile": "Dockerfile-cuda"
+    "dockerfile": "Dockerfile-cuda",
+    "os": ["ubuntu-latest", "ubuntu-latest-arm"]
   },
   {
     "name": "blackwell-100",
@@ -52,7 +57,8 @@
     "sccache": true,
     "cudaComputeCap": 100,
     "grpc": true,
-    "dockerfile": "Dockerfile-cuda"
+    "dockerfile": "Dockerfile-cuda",
+    "os": ["ubuntu-latest", "ubuntu-latest-arm"]
   },
   {
     "name": "blackwell-120",
@@ -61,7 +67,8 @@
     "sccache": true,
     "cudaComputeCap": 120,
     "grpc": true,
-    "dockerfile": "Dockerfile-cuda"
+    "dockerfile": "Dockerfile-cuda",
+    "os": ["ubuntu-latest", "ubuntu-latest-arm"]
   },
   {
     "name": "all",
@@ -69,7 +76,8 @@
     "runOn": "always",
     "sccache": false,
     "grpc": false,
-    "dockerfile": "Dockerfile-cuda-all"
+    "dockerfile": "Dockerfile-cuda-all",
+    "os": ["ubuntu-latest", "ubuntu-latest-arm"]
   },
   {
     "name": "cpu",
